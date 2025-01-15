@@ -98,6 +98,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/kserve/kserve/pkg/apis/serving/v1beta1.PredictorSpec":                schema_pkg_apis_serving_v1beta1_PredictorSpec(ref),
 		"github.com/kserve/kserve/pkg/apis/serving/v1beta1.SKLearnSpec":                  schema_pkg_apis_serving_v1beta1_SKLearnSpec(ref),
 		"github.com/kserve/kserve/pkg/apis/serving/v1beta1.SecurityConfig":               schema_pkg_apis_serving_v1beta1_SecurityConfig(ref),
+		"github.com/kserve/kserve/pkg/apis/serving/v1beta1.ServiceConfig":                schema_pkg_apis_serving_v1beta1_ServiceConfig(ref),
 		"github.com/kserve/kserve/pkg/apis/serving/v1beta1.StorageSpec":                  schema_pkg_apis_serving_v1beta1_StorageSpec(ref),
 		"github.com/kserve/kserve/pkg/apis/serving/v1beta1.TFServingSpec":                schema_pkg_apis_serving_v1beta1_TFServingSpec(ref),
 		"github.com/kserve/kserve/pkg/apis/serving/v1beta1.TorchServeSpec":               schema_pkg_apis_serving_v1beta1_TorchServeSpec(ref),
@@ -854,16 +855,23 @@ func schema_pkg_apis_serving_v1alpha1_LocalModelCacheSpec(ref common.ReferenceCa
 							Ref:         ref("k8s.io/apimachinery/pkg/api/resource.Quantity"),
 						},
 					},
-					"nodeGroup": {
+					"nodeGroups": {
 						SchemaProps: spec.SchemaProps{
-							Description: "group of nodes to cache the model on.",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "group of nodes to cache the model on. Todo: support more than 1 node groups",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
 				},
-				Required: []string{"sourceModelUri", "modelSize", "nodeGroup"},
+				Required: []string{"sourceModelUri", "modelSize", "nodeGroups"},
 			},
 		},
 		Dependencies: []string{
@@ -5521,6 +5529,36 @@ func schema_pkg_apis_serving_v1beta1_InferenceServicesConfig(ref common.Referenc
 							Ref:         ref("github.com/kserve/kserve/pkg/apis/serving/v1beta1.ExplainersConfig"),
 						},
 					},
+					"serviceAnnotationDisallowedList": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ServiceAnnotationDisallowedList is a list of annotations that are not allowed to be propagated to Knative revisions",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"serviceLabelDisallowedList": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ServiceLabelDisallowedList is a list of labels that are not allowed to be propagated to Knative revisions",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"explainers"},
 			},
@@ -5975,6 +6013,18 @@ func schema_pkg_apis_serving_v1beta1_LocalModelConfig(ref common.ReferenceCallba
 						},
 					},
 					"fsGroup": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"jobTTLSecondsAfterFinished": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int32",
+						},
+					},
+					"reconcilationFrequencyInSecs": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},
 							Format: "int64",
@@ -9205,6 +9255,25 @@ func schema_pkg_apis_serving_v1beta1_SecurityConfig(ref common.ReferenceCallback
 					},
 				},
 				Required: []string{"autoMountServiceAccountToken"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_serving_v1beta1_ServiceConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"serviceClusterIPNone": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ServiceClusterIPNone is a boolean flag to indicate if the service should have a clusterIP set to None. If the DeploymentMode is Raw, the default value for ServiceClusterIPNone is false when the value is absent.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+				},
 			},
 		},
 	}
